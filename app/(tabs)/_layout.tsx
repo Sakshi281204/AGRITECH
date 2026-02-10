@@ -1,33 +1,88 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+
+        // 🌿 Active / Inactive colors
+        tabBarActiveTintColor: "#1b5e20",
+        tabBarInactiveTintColor: "#6d6d6d",
+
+        // 🎨 Tab bar styling
+        tabBarStyle: {
+          backgroundColor: "#f1f8e9",
+          height: Platform.OS === "ios" ? 85 : 65,
+          paddingBottom: 8,
+          paddingTop: 6,
+          borderTopWidth: 0.5,
+        },
+
+        // 🔤 Label style
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+        },
+      }}
+    >
+      {/* 🏠 Home – hidden */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          href: null,
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="crop"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "पीक",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="leaf" size={26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="disease"
+        options={{
+          title: "रोग",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="bug-outline" size={26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="weather"
+        options={{
+          title: "हवामान",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="partly-sunny" size={26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: "इतिहास",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="time-outline" size={26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "प्रोफाइल",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={26} color={color} />
+          ),
         }}
       />
     </Tabs>
