@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "agritech",
+    "name": "AGRITECH",
     "slug": "agritech",
     "version": "1.0.0",
+    "description": "AGRITECH is a smart farming assistant app providing live weather updates, alerts, and farmer support services.",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo .jpeg",
     "scheme": "agritech",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -12,6 +13,15 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.sakshi281204.agritech",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,6 +53,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "119add69-38ef-44da-accc-b73c037affce"
+      }
     }
   }
 }

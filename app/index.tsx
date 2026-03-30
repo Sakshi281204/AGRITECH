@@ -17,7 +17,7 @@ export default function Home() {
         <Text style={styles.buttonText}>🍃 रोग ओळख</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push("/Wheather")}>
+      <TouchableOpacity style={styles.button} onPress={() => router.push("/weather")}>
         <Text style={styles.buttonText}>🌦 हवामान माहिती</Text>
       </TouchableOpacity>
 

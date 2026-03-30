@@ -66,6 +66,17 @@ export default function TabLayout() {
         }}
       />
 
+      {/* 📘 NEW Crop Guide Tab */}
+      <Tabs.Screen
+        name="cropguide"
+        options={{
+          title: "मार्गदर्शक",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="book-outline" size={26} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="history"
         options={{
