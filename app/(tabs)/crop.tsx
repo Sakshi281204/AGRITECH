@@ -7,253 +7,225 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-/* ---------- TALUKA DATA (Only Nashik District) ---------- */
-const talukaData = {
-  Dindori: ["Vani", "Palkhed", "Janori", "Ozar", "Khedgaon"],
-  Niphad: ["Pimpalgaon", "Saykheda", "Lasalgaon", "Chandori", "Kasbe Sukene"],
-  Sinnar: ["Dubere", "Pangri", "Gonde", "Deshvandi", "Khambale"],
-  Yeola: ["Andarsul", "Nagarsul", "Mukhed", "Patoda", "Kotamgaon"],
-  Kalwan: ["Abhona", "Dalwat", "Oture", "Bharam", "Deola"],
-  Baglan: ["Satana Rural", "Taharabad", "Mulher", "Nitane", "Ajmir"],
-  Malegaon: ["Chandanpuri", "Dabhadi", "Pimpalner", "Vadner", "Karanjali"],
-  Chandwad: ["Vadner Bhairav", "Harsul", "Pathare", "Dugaon", "Raipur"],
-  Surgana: ["Borgaon", "Umbarpada", "Pimpalsond", "Karanjali", "Rohile"],
-  Trimbakeshwar: ["Anjaneri", "Khambale", "Brahmagiri", "Pegalgav", "Talwade"],
-  Deola: ["Ravalgaon", "Umarane", "Khuntewadi", "Wadali", "Pimpalkhute"],
-  Igatpuri: ["Ghoti Rural", "Take Harsha", "Waki", "Ashwin Nagar", "Mundhegaon"],
-  Peint: ["Shevge", "Peth", "Gondegaon", "Shirwade", "Karanjali"],
-  Nashik: ["Makhmalabad", "Gangapur", "Belgaon", "Vilholi", "Jakhori"],
-  Nandgaon: ["Hiswal", "Astagaon", "Khadakmalegaon", "Kothure", "Sakore"],
-};
+import cropData from "C:\\Users\\asus\\project\\agritech\\data\\cropdata.json";
 
-type Season = "Kharip" | "Rabbi" | "Year";
-
-/* ---------- SCREEN ---------- */
 export default function CropScreen() {
-  const [taluka, setTaluka] = useState("Dindori");
+  const [selectedTaluka, setSelectedTaluka] = useState<any>(null);
+  const [villages, setVillages] = useState<any[]>([]);
   const [village, setVillage] = useState("");
-  const [season, setSeason] = useState<Season>("Kharip");
-  const [selectedSeason, setSelectedSeason] = useState<Season | null>(null);
-  const [areaAcre, setAreaAcre] = useState<number>(1);
+
+  const [season, setSeason] = useState("Kharif");
+  const [areaAcre, setAreaAcre] = useState(1);
   const [water, setWater] = useState("पाऊस");
   const [soil, setSoil] = useState("मध्यम");
+
+  const [result, setResult] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
-  const talukas = Object.keys(talukaData);
-  const villages =
-    talukaData[taluka as keyof typeof talukaData] || [];
+  const fetchCrops = async () => {
+    setLoading(true);
+    setShowResult(false);
+
+    try {
+      const bodyData = {
+        season: season.toLowerCase(),
+        soil: soil,
+        water: water,
+        land: areaAcre,
+        taluka: selectedTaluka?.taluka_name_en,
+      };
+
+      console.log("Sending:", bodyData);
+
+      const response = await fetch(
+        "http://192.168.31.252:8000/api/crops/recommend", // 🔁 CHANGE IP
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(bodyData),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Response:", data);
+
+      setResult(data);
+      setShowResult(true);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+
+    setLoading(false);
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* ---------- HEADER ---------- */}
-      <Text style={styles.header}>
-        🌱 आपल्या शेतासाठी योग्य पीक शोधा
-      </Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <Text style={styles.header}>
+          🌱 आपल्या शेतासाठी योग्य पीक शोधा
+        </Text>
 
-      {/* ---------- TALUKA ---------- */}
-      <Text style={styles.label}>
-        📍 नाशिक जिल्ह्यामधील तालुके
-      </Text>
-      <Picker
-        selectedValue={taluka}
-        onValueChange={(value) => {
-          setTaluka(value);
-          setVillage("");
-        }}
-      >
-        {talukas.map((t) => (
-          <Picker.Item key={t} label={t} value={t} />
-        ))}
-      </Picker>
+        {/* TALUKA */}
+        <Text style={styles.label}>📍 तालुका</Text>
+        <Picker
+          selectedValue={selectedTaluka}
+          onValueChange={(value) => {
+            setSelectedTaluka(value);
+            setVillages(value?.villages || []);
+          }}
+        >
+          <Picker.Item label="तालुका निवडा" value={null} />
+          {cropData.talukas.map((t: any, index: number) => (
+            <Picker.Item
+              key={index}
+              label={t.taluka_name_mr}
+              value={t}
+            />
+          ))}
+        </Picker>
 
-      {/* ---------- VILLAGE ---------- */}
-      <Text style={styles.label}>🏡 गाव</Text>
-      <Picker selectedValue={village} onValueChange={setVillage}>
-        <Picker.Item label="गाव निवडा" value="" />
-        {villages.map((v) => (
-          <Picker.Item key={v} label={v} value={v} />
-        ))}
-      </Picker>
+        {/* VILLAGE */}
+        <Text style={styles.label}>🏡 गाव</Text>
+        <Picker selectedValue={village} onValueChange={setVillage}>
+          <Picker.Item label="गाव निवडा" value="" />
+          {villages.map((v: any, index: number) => (
+            <Picker.Item
+              key={index}
+              label={v.village_name_mr}
+              value={v.village_name_en}
+            />
+          ))}
+        </Picker>
 
-      {/* ---------- SEASON ---------- */}
-      <Text style={styles.label}>🌦 हंगाम</Text>
-      <Picker selectedValue={season} onValueChange={setSeason}>
-        <Picker.Item label="खरीप" value="Kharip" />
-        <Picker.Item label="रब्बी" value="Rabbi" />
-        <Picker.Item label="पूर्ण वर्ष" value="Year" />
-      </Picker>
+        {/* SEASON */}
+        <Text style={styles.label}>🌦 हंगाम</Text>
+        <Picker selectedValue={season} onValueChange={setSeason}>
+          <Picker.Item label="खरीप" value="Kharif" />
+          <Picker.Item label="रब्बी" value="Rabbi" />
+        </Picker>
 
-      {/* ---------- AREA ---------- */}
-      <Text style={styles.label}>
-        शेती क्षेत्र: {areaAcre} एकर
-      </Text>
-      <Slider
-        minimumValue={0.5}
-        maximumValue={25}
-        step={0.5}
-        value={areaAcre}
-        onValueChange={(value: number) => setAreaAcre(value)}
-        minimumTrackTintColor="#4CAF50"
-        maximumTrackTintColor="#ccc"
-        thumbTintColor="#2E7D32"
-      />
+        {/* AREA */}
+        <Text style={styles.label}>
+          📏 शेती क्षेत्र: {areaAcre} एकर
+        </Text>
+        <Slider
+          minimumValue={0.5}
+          maximumValue={25}
+          step={0.5}
+          value={areaAcre}
+          onValueChange={(value: number) => setAreaAcre(value)}
+        />
 
-      {/* ---------- WATER ---------- */}
-      <Text style={styles.label}>💧 पाण्याचा स्रोत</Text>
-      {["पाऊस", "विहीर", "कालवा", "ठिबक"].map((w) => (
-        <TouchableOpacity key={w} onPress={() => setWater(w)}>
-          <Text style={water === w ? styles.selected : styles.option}>
-            {water === w ? "🔘" : "⚪"} {w}
-          </Text>
-        </TouchableOpacity>
-      ))}
-
-      {/* ---------- SOIL ---------- */}
-      <Text style={styles.label}>🌍 मातीचा प्रकार</Text>
-      <View style={styles.soilRow}>
-        {["काळी", "मध्यम", "हलकी"].map((s) => (
-          <TouchableOpacity
-            key={s}
-            style={[
-              styles.soilBtn,
-              soil === s && styles.soilSelected,
-            ]}
-            onPress={() => setSoil(s)}
-          >
-            <Text>{s}</Text>
+        {/* WATER */}
+        <Text style={styles.label}>💧 पाणी</Text>
+        {["पाऊस", "विहीर", "कालवा", "ठिबक"].map((w) => (
+          <TouchableOpacity key={w} onPress={() => setWater(w)}>
+            <Text style={water === w ? styles.selected : styles.option}>
+              {water === w ? "🔘" : "⚪"} {w}
+            </Text>
           </TouchableOpacity>
         ))}
-      </View>
 
-      {/* ---------- BUTTON ---------- */}
-      <TouchableOpacity
-        style={styles.mainBtn}
-        onPress={() => {
-          setSelectedSeason(season);
-          setShowResult(true);
-        }}
-      >
-        <Text style={styles.mainBtnText}>
-          🌾 पीक शोधा
-        </Text>
-      </TouchableOpacity>
-
-      {/* ---------- RESULT ---------- */}
-      {showResult && selectedSeason && (
-        <View style={styles.card}>
-          {selectedSeason === "Kharip" && (
-            <>
-              <Text style={styles.cropName}>🧅 कांदा (Onion)</Text>
-              <Text>⭐⭐⭐⭐☆</Text>
-              <Text>✔ मध्यम माती योग्य</Text>
-              <Text>✔ पाऊस + ठिबक सिंचन योग्य</Text>
-              <Text>✔ रोग: पांढरी बुरशी, थ्रिप्स</Text>
-              <Text style={styles.income}>
-                अपेक्षित उत्पन्न: ₹1.5 – 2 लाख / एकर
-              </Text>
-            </>
-          )}
-
-          {selectedSeason === "Rabbi" && (
-            <>
-              <Text style={styles.cropName}>🍅 टोमॅटो (Tomato)</Text>
-              <Text>⭐⭐⭐⭐☆</Text>
-              <Text>✔ ठिबक सिंचन उत्तम</Text>
-              <Text>✔ रोग: लीफ कर्ल, ब्लाइट</Text>
-              <Text>✔ नियमित फवारणी आवश्यक</Text>
-              <Text style={styles.income}>
-                अपेक्षित उत्पन्न: ₹2 – 3 लाख / एकर
-              </Text>
-            </>
-          )}
-
-          {selectedSeason === "Year" && (
-            <>
-              <Text style={styles.cropName}>🍇 द्राक्षे (Grapes)</Text>
-              <Text>⭐⭐⭐⭐⭐</Text>
-              <Text>✔ काळी माती सर्वोत्तम</Text>
-              <Text>✔ ठिबक सिंचन आवश्यक</Text>
-              <Text>✔ रोग: डाऊनी मिल्ड्यू</Text>
-              <Text style={styles.income}>
-                अपेक्षित उत्पन्न: ₹4 – 6 लाख / एकर
-              </Text>
-            </>
-          )}
+        {/* SOIL */}
+        <Text style={styles.label}>🌍 माती</Text>
+        <View style={styles.soilRow}>
+          {["काळी", "मध्यम", "हलकी"].map((s) => (
+            <TouchableOpacity
+              key={s}
+              style={[
+                styles.soilBtn,
+                soil === s && styles.soilSelected,
+              ]}
+              onPress={() => setSoil(s)}
+            >
+              <Text>{s}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      )}
-    </ScrollView>
+
+        {/* BUTTON */}
+        <TouchableOpacity style={styles.mainBtn} onPress={fetchCrops}>
+          <Text style={styles.mainBtnText}>🌾 पीक शोधा</Text>
+        </TouchableOpacity>
+
+        {/* LOADING */}
+        {loading && <ActivityIndicator size="large" color="green" />}
+
+        {/* RESULT */}
+        {showResult && result.length > 0 && (
+          <View style={styles.card}>
+            {result.map((item, index) => (
+              <View key={index} style={{ marginBottom: 15 }}>
+                <Text style={styles.cropName}>
+                  🌾 {item.crop} ({item.marathi})
+                </Text>
+                <Text>📍 तालुका: {item.taluka}</Text>
+                <Text>🏡 गाव: {item.village}</Text>
+                <Text>🌦 Season: {item.season}</Text>
+                <Text>🌍 Soil: {item.soil.join(", ")}</Text>
+                <Text>💧 Water: {item.water.join(", ")}</Text>
+                <Text>📏 Min Land: {item.min_land} acres</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {showResult && result.length === 0 && (
+          <Text style={{ marginTop: 20 }}>
+            ❌ योग्य पीक सापडले नाही
+          </Text>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-/* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#F4FFF4",
-  },
+  container: { flex: 1, padding: 16, backgroundColor: "#F4FFF4" },
   header: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 15,
-    marginTop: 25,
     color: "#2E7D32",
   },
-  label: {
-    fontSize: 18,
-    marginTop: 15,
-    fontWeight: "600",
-  },
-  option: {
-    fontSize: 18,
-    marginVertical: 4,
-  },
-  selected: {
-    fontSize: 18,
-    marginVertical: 4,
-    color: "#2E7D32",
-  },
-  soilRow: {
-    flexDirection: "row",
-    marginTop: 8,
-  },
+  label: { fontSize: 16, marginTop: 15, fontWeight: "600" },
+  option: { fontSize: 16, marginVertical: 4 },
+  selected: { fontSize: 16, marginVertical: 4, color: "#2E7D32" },
+  soilRow: { flexDirection: "row", marginTop: 8 },
   soilBtn: {
     padding: 10,
     borderWidth: 1,
     borderRadius: 8,
     marginRight: 8,
   },
-  soilSelected: {
-    backgroundColor: "#C8E6C9",
-  },
+  soilSelected: { backgroundColor: "#C8E6C9" },
   mainBtn: {
     backgroundColor: "#4CAF50",
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 25,
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 20,
   },
   mainBtnText: {
     color: "#fff",
     textAlign: "center",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
   card: {
     backgroundColor: "#fff",
     padding: 16,
-    borderRadius: 12,
-    marginTop: 25,
-    elevation: 4,
+    borderRadius: 10,
+    marginTop: 20,
+    elevation: 3,
   },
-  cropName: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  income: {
-    marginTop: 10,
-    fontWeight: "600",
-  },
+  cropName: { fontSize: 18, fontWeight: "bold" },
 });

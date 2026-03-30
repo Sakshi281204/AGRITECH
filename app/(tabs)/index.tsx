@@ -5,7 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 
 export default function Home() {
@@ -45,7 +45,14 @@ export default function Home() {
             <Text style={styles.buttonText}>🌦 हवामान माहिती</Text>
           </TouchableOpacity>
 
-          {/* ✅ NEW - Crop Guide */}
+          {/* ✅ Added Mandi / Bajarbhav Button */}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/mandi")}
+          >
+            <Text style={styles.buttonText}>💰 बाजारभाव</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.button}
             onPress={() => router.push("/cropguide")}

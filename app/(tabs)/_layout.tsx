@@ -1,3 +1,4 @@
+
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
@@ -7,12 +8,8 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-
-        // 🌿 Active / Inactive colors
         tabBarActiveTintColor: "#1b5e20",
         tabBarInactiveTintColor: "#6d6d6d",
-
-        // 🎨 Tab bar styling
         tabBarStyle: {
           backgroundColor: "#f1f8e9",
           height: Platform.OS === "ios" ? 85 : 65,
@@ -20,15 +17,12 @@ export default function TabLayout() {
           paddingTop: 6,
           borderTopWidth: 0.5,
         },
-
-        // 🔤 Label style
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "600",
         },
       }}
     >
-      {/* 🏠 Home – hidden */}
       <Tabs.Screen
         name="index"
         options={{
@@ -66,7 +60,15 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 📘 NEW Crop Guide Tab */}
+      <Tabs.Screen
+        name="mandi"
+        options={{
+          title: "मंडी",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="cash-outline" size={26} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="cropguide"
         options={{
