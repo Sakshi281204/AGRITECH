@@ -1,21 +1,18 @@
-// DiseaseScreen.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Image,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
-  Platform,
   ActivityIndicator,
   Alert,
 } from "react-native";
+
 import * as ImagePicker from "expo-image-picker";
 import * as Speech from "expo-speech";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Voice from "@react-native-voice/voice";
 import { Picker } from "@react-native-picker/picker";
 
 type Message = {
@@ -24,209 +21,362 @@ type Message = {
   sender: "user" | "bot";
 };
 
+const cropNames: any = {
+  grape: "द्राक्ष",
+  tomato: "टोमॅटो",
+  onion: "कांदा",
+};
+
 export default function DiseaseScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
-    { id: "1", text: "नमस्कार 🙏 पानाचा फोटो घ्या.", sender: "bot" },
+    {
+      id: "1",
+      text: "🙏 नमस्कार! पानाचा फोटो काढा किंवा गॅलरीमधून निवडा.",
+      sender: "bot",
+    },
   ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
 
-  // Crop Picker state
+  const [loading, setLoading] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState("");
 
+  const flatListRef = useRef<FlatList>(null);
+
   const BACKEND_URL =
-    "https://devoted-spontaneity-production.up.railway.app/predict/"; // ✅ trailing slash
+    "https://smart-agritech-assistance-2.onrender.com";
 
-  // ---------------- VOICE ----------------
   useEffect(() => {
-    Voice.onSpeechResults = (e: any) => {
-      if (e.value && e.value.length > 0) {
-        const text = e.value[0];
-        setInput(text);
-        sendMessage(text);
-        setIsListening(false);
-      }
-    };
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
 
-    return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
-    };
-  }, []);
+  const addBotMessage = (text: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        text,
+        sender: "bot",
+      },
+    ]);
 
-  const startListening = async () => {
-    try {
-      setIsListening(true);
-      await Voice.start("mr-IN");
-    } catch (e) {
-      console.log(e);
-    }
+    Speech.speak(text, {
+      language: "mr-IN",
+      rate: 0.9,
+      pitch: 1,
+    });
   };
 
-  const stopListening = async () => {
-    await Voice.stop();
-    setIsListening(false);
-  };
-
-  // ---------------- CAMERA ----------------
-  const pickImage = async () => {
+  const openCamera = async () => {
     if (!selectedCrop) {
-      Alert.alert("कृपया पिक निवडा!");
+      Alert.alert("⚠️ कृपया पिक निवडा");
       return;
     }
 
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    const permission =
+      await ImagePicker.requestCameraPermissionsAsync();
+
     if (!permission.granted) {
-      alert("कॅमेऱ्याची परवानगी द्या");
+      Alert.alert("कॅमेरा परवानगी आवश्यक आहे");
       return;
     }
 
-    const result = await ImagePicker.launchCameraAsync({ quality: 1 });
-    if (result.canceled) return;
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 1,
+    });
 
-    const uri = result.assets[0].uri;
-    setImage(uri);
-    uploadImage(uri);
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+
+      setImage(uri);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          text: "📷 फोटो पाठवला",
+          sender: "user",
+        },
+      ]);
+
+      sendToBackend(uri);
+    }
   };
 
-  // ---------------- UPLOAD FUNCTION ----------------
-  const uploadImage = async (uri: string) => {
+  const openGallery = async () => {
+    if (!selectedCrop) {
+      Alert.alert("⚠️ कृपया पिक निवडा");
+      return;
+    }
+
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert("गॅलरी परवानगी आवश्यक आहे");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+
+      setImage(uri);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          text: "🖼 फोटो निवडला",
+          sender: "user",
+        },
+      ]);
+
+      sendToBackend(uri);
+    }
+  };
+
+  const sendToBackend = async (uri: string) => {
     try {
       setLoading(true);
 
       const formData = new FormData();
-      formData.append("file", {
-        uri,
-        name: "leaf.jpg",
-        type: "image/jpeg",
-      } as any);
 
-      formData.append("crop", selectedCrop); // ✅ send selected crop
+      formData.append(
+        "file",
+        {
+          uri,
+          name: "leaf.jpg",
+          type: "image/jpeg",
+        } as any
+      );
 
-      const response = await fetch(BACKEND_URL, { method: "POST", body: formData });
+      formData.append("plant_type", selectedCrop);
 
-      if (!response.ok) throw new Error("Server Error");
+      console.log("Sending request...");
+      console.log("Crop:", selectedCrop);
+
+      const response = await fetch(
+        `${BACKEND_URL}/predict/`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      console.log("Status:", response.status);
 
       const data = await response.json();
 
-      const prediction = data.prediction || "रोग सापडला नाही";
-      const recommendation = data.recommendation || "";
+      console.log("Response:", data);
 
-      const marathiText = `🌿 ओळखलेला रोग: ${prediction}\n${recommendation}`;
+      if (!data.success) {
+        throw new Error("Prediction Failed");
+      }
 
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now().toString(), text: marathiText, sender: "bot" },
-      ]);
+      const plant =
+        cropNames[data["वनस्पती"]] ||
+        data["वनस्पती"];
 
-      Speech.speak(marathiText, { language: "mr-IN" });
+      const disease =
+        data["रोग"] || "रोग ओळखला नाही";
+
+      const remedy =
+        data["उपाय"] || "उपाय उपलब्ध नाही";
+
+      const confidence =
+        data["confidence"] || 0;
+
+      const resultText =
+        `🌱 पीक: ${plant}
+
+🦠 रोग:
+${disease}
+
+💊 उपाय:
+${remedy}
+
+📊 विश्वास:
+${confidence}%`;
+
+      addBotMessage(resultText);
     } catch (error) {
-      console.log("UPLOAD ERROR:", error);
+      console.log("API ERROR:", error);
 
-      const errorMsg = "सर्व्हरशी संपर्क होत नाही.";
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now().toString(), text: errorMsg, sender: "bot" },
-      ]);
-      Speech.speak(errorMsg, { language: "mr-IN" });
+      addBotMessage(
+        "❌ ओळख अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // ---------------- CHAT ----------------
-  const sendMessage = (textParam?: string) => {
-    const textToSend = textParam || input;
-    if (!textToSend.trim()) return;
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      text: textToSend,
-      sender: "user",
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-  };
-
-  // ---------------- UI ----------------
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Text style={styles.title}>🌾 AGRITECH</Text>
+        <Text style={styles.title}>
+          🌾 कृषी रोग ओळख
+        </Text>
 
-        {/* Crop Picker */}
-        <View style={{ marginBottom: 10, borderWidth: 1, borderColor: "#4CAF50", borderRadius: 8 }}>
+        <View style={styles.card}>
           <Picker
             selectedValue={selectedCrop}
-            onValueChange={(itemValue) => setSelectedCrop(itemValue)}
+            onValueChange={(value) =>
+              setSelectedCrop(value)
+            }
           >
-            <Picker.Item label="पिक निवडा" value="" />
-            <Picker.Item label="कांदा" value="onion" />
-            <Picker.Item label="टोमॅटो" value="tomato" />
-            <Picker.Item label="द्राक्ष" value="grapes" />
+            <Picker.Item
+              label="पिक निवडा"
+              value=""
+            />
+
+            <Picker.Item
+              label="कांदा"
+              value="onion"
+            />
+
+            <Picker.Item
+              label="टोमॅटो"
+              value="tomato"
+            />
+
+            <Picker.Item
+              label="द्राक्ष"
+              value="grape"
+            />
           </Picker>
         </View>
 
-        {/* Selected Image */}
-        {image && <Image source={{ uri: image }} style={styles.image} />}
-
-        {loading && <ActivityIndicator size="large" color="#2E7D32" />}
+        {image && (
+          <Image
+            source={{ uri: image }}
+            style={styles.image}
+          />
+        )}
 
         <FlatList
+          ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View
-              style={[styles.message, item.sender === "user" ? styles.userMsg : styles.botMsg]}
+              style={[
+                styles.message,
+                item.sender === "bot"
+                  ? styles.botMsg
+                  : styles.userMsg,
+              ]}
             >
-              <Text style={styles.messageText}>{item.text}</Text>
+              <Text style={styles.messageText}>
+                {item.text}
+              </Text>
             </View>
           )}
         />
 
-        <View style={styles.bottomBox}>
-          <TextInput
-            placeholder="प्रश्न लिहा..."
-            value={input}
-            onChangeText={setInput}
-            style={styles.input}
+        {loading && (
+          <ActivityIndicator
+            size="large"
+            color="#2E7D32"
           />
+        )}
 
-          <View style={styles.row}>
-            <TouchableOpacity style={styles.btn} onPress={pickImage}>
-              <Text style={styles.btnText}>📷 फोटो</Text>
-            </TouchableOpacity>
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={openCamera}
+          >
+            <Text style={styles.buttonText}>
+              📷 कॅमेरा
+            </Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={isListening ? stopListening : startListening}
-            >
-              <Text style={styles.btnText}>
-                {isListening ? "🛑 थांबा" : "🎙 माइक"}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={openGallery}
+          >
+            <Text style={styles.buttonText}>
+              🖼 गॅलरी
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
   );
 }
 
-// ---------------- STYLES ----------------
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F5FFF5" },
-  container: { flex: 1, padding: 15 },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: "#2E7D32", marginBottom: 10 },
-  image: { width: "100%", height: 200, borderRadius: 10, marginBottom: 10 },
-  message: { padding: 10, borderRadius: 10, marginVertical: 4, maxWidth: "80%" },
-  userMsg: { alignSelf: "flex-end", backgroundColor: "#C8E6C9" },
-  botMsg: { alignSelf: "flex-start", backgroundColor: "#E8F5E9" },
-  messageText: { fontSize: 16 },
-  bottomBox: { marginTop: 10 },
-  input: { borderWidth: 1, borderColor: "#4CAF50", borderRadius: 8, padding: 10, backgroundColor: "#fff", marginBottom: 8 },
-  row: { flexDirection: "row", justifyContent: "space-between" },
-  btn: { flex: 1, backgroundColor: "#2E7D32", padding: 12, borderRadius: 8, marginHorizontal: 5 },
-  btnText: { color: "#fff", textAlign: "center", fontWeight: "600" },
+  safe: {
+    flex: 1,
+    backgroundColor: "#F4FFF4",
+  },
+
+  container: {
+    flex: 1,
+    padding: 15,
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#2E7D32",
+    marginBottom: 15,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 10,
+    elevation: 3,
+  },
+
+  image: {
+    width: "100%",
+    height: 220,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+
+  message: {
+    padding: 12,
+    borderRadius: 12,
+    marginVertical: 5,
+    maxWidth: "85%",
+  },
+
+  botMsg: {
+    backgroundColor: "#E8F5E9",
+    alignSelf: "flex-start",
+  },
+
+  userMsg: {
+    backgroundColor: "#C8E6C9",
+    alignSelf: "flex-end",
+  },
+
+  messageText: {
+    fontSize: 16,
+  },
+
+  row: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+
+  button: {
+    flex: 1,
+    backgroundColor: "#2E7D32",
+    padding: 15,
+    borderRadius: 12,
+    marginHorizontal: 5,
+  },
+
+  buttonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
 });
