@@ -14,6 +14,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as Speech from "expo-speech";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
 
 type Message = {
   id: string;
@@ -189,8 +191,21 @@ export default function DiseaseScreen() {
       const confidence =
         data["confidence"] || 0;
 
+//       const resultText =
+//         `🌱 पीक: ${plant}
+
+// 🦠 रोग:
+// ${disease}
+
+// 💊 उपाय:
+// ${remedy}
+
+// 📊 विश्वास:
+// ${confidence}%`;
+
+//       addBotMessage(resultText);
       const resultText =
-        `🌱 पीक: ${plant}
+      `🌱 पीक: ${plant}
 
 🦠 रोग:
 ${disease}
@@ -201,7 +216,22 @@ ${remedy}
 📊 विश्वास:
 ${confidence}%`;
 
-      addBotMessage(resultText);
+try {
+  await addDoc(collection(db, "history"), {
+    type: "Disease Detection",
+    crop: plant,
+    disease: disease,
+    result: remedy,
+    confidence: confidence,
+    date: new Date().toLocaleString(),
+  });
+
+  console.log("✅ Disease history saved");
+} catch (err) {
+  console.log("❌ Disease history save failed:", err);
+}
+
+addBotMessage(resultText);
     } catch (error) {
       console.log("API ERROR:", error);
 

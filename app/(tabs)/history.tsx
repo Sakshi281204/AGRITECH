@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Linking,
@@ -7,73 +7,132 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type QueryItem = {
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../config/firebase";
+
+type HistoryItem = {
   id: string;
-  question: string;
+  type: string;
+  result: string;
   date: string;
-  time: string;
 };
 
 export default function History() {
-  const [queries] = useState<QueryItem[]>([
-    {
-      id: "1",
-      question: "कापूस पिकावर गुलाबी बोंडअळी कशी नियंत्रणात आणावी?",
-      date: "10 Feb 2026",
-      time: "10:45 AM",
-    },
-    {
-      id: "2",
-      question: "गव्हासाठी योग्य खताचे प्रमाण किती असावे?",
-      date: "09 Feb 2026",
-      time: "04:20 PM",
-    },
-    {
-      id: "3",
-      question: "ड्रिप सिंचनासाठी अनुदान योजना माहिती",
-      date: "08 Feb 2026",
-      time: "01:10 PM",
-    },
-  ]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const callKrushiAdhikari = () => {
-    Linking.openURL("tel:9876543210");
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const querySnapshot = await getDocs(
+        collection(db, "history")
+      );
+
+      const data: HistoryItem[] = [];
+
+      querySnapshot.forEach((document) => {
+        const item: any = document.data();
+
+        let formattedDate = "No Date";
+
+        if (item.date) {
+          if (
+            typeof item.date === "object" &&
+            item.date.seconds
+          ) {
+            formattedDate = new Date(
+              item.date.seconds * 1000
+            ).toLocaleString();
+          } else {
+            formattedDate = String(item.date);
+          }
+        }
+
+        data.push({
+          id: document.id,
+          type: item.type || "AGRITECH",
+          result: item.result || "माहिती उपलब्ध नाही",
+          date: formattedDate,
+        });
+      });
+
+      setHistory(data);
+    } catch (error) {
+      console.log("History Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderItem = ({ item }: { item: QueryItem }) => (
-    <View style={styles.card}>
-      <View style={styles.row}>
-        <Ionicons name="help-circle-outline" size={22} color="#2E7D32" />
-        <Text style={styles.question}>{item.question}</Text>
-      </View>
+  const callKrushiAdhikari = () => {
+    Linking.openURL("tel:18001801551");
+  };
 
-      <View style={styles.dateRow}>
-        <Ionicons name="calendar-outline" size={16} color="#555" />
-        <Text style={styles.dateText}>
-          {item.date} | {item.time}
-        </Text>
-      </View>
+  const renderItem = ({ item }: { item: HistoryItem }) => (
+    <View style={styles.card}>
+      <Text style={styles.type}>
+        {item.type}
+      </Text>
+
+      <Text style={styles.result}>
+        {item.result}
+      </Text>
+
+      <Text style={styles.date}>
+        {item.date}
+      </Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <Text style={styles.header}>📜 शेतकरी प्रश्न इतिहास</Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>
+        📜 AGRITECH इतिहास
+      </Text>
 
-      <FlatList
-        data={queries}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#2E7D32"
+          style={{ marginTop: 50 }}
+        />
+      ) : (
+        <FlatList
+          data={history}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 120,
+          }}
+          ListEmptyComponent={
+            <Text style={styles.empty}>
+              अजून कोणताही इतिहास उपलब्ध नाही
+            </Text>
+          }
+        />
+      )}
 
-      <TouchableOpacity style={styles.callButton} onPress={callKrushiAdhikari}>
-        <Ionicons name="call" size={22} color="#fff" />
-        <Text style={styles.callText}>कृषी अधिकारी यांना कॉल करा</Text>
+      <TouchableOpacity
+        style={styles.callButton}
+        onPress={callKrushiAdhikari}
+      >
+        <Ionicons
+          name="call"
+          size={22}
+          color="#fff"
+        />
+
+        <Text style={styles.callText}>
+          कृषी अधिकारी यांना कॉल करा
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -85,44 +144,49 @@ const styles = StyleSheet.create({
     backgroundColor: "#F4F6F9",
     paddingHorizontal: 15,
   },
+
   header: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#2E7D32",
-    marginTop: 10,   // extra spacing
-    marginBottom: 15,
+    textAlign: "center",
+    marginTop: 25,
+    marginBottom: 20,
   },
+
   card: {
     backgroundColor: "#fff",
     padding: 15,
     borderRadius: 15,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
     elevation: 3,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+
+  type: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#2E7D32",
   },
-  question: {
-    flex: 1,
-    marginLeft: 8,
+
+  result: {
     fontSize: 15,
     color: "#333",
-    fontWeight: "500",
-  },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
     marginTop: 8,
   },
-  dateText: {
-    marginLeft: 5,
-    fontSize: 13,
-    color: "#666",
+
+  date: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 10,
   },
+
+  empty: {
+    textAlign: "center",
+    marginTop: 80,
+    fontSize: 16,
+    color: "#777",
+  },
+
   callButton: {
     position: "absolute",
     bottom: 20,
@@ -136,10 +200,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 5,
   },
+
   callText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
     marginLeft: 8,
+    fontSize: 16,
   },
 });

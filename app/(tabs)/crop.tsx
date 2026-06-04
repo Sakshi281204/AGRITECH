@@ -1,260 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import {
-//   ScrollView,
-//   StyleSheet,
-//   Text,
-//   TouchableOpacity,
-//   View,
-//   ActivityIndicator,
-// } from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
-
-// export default function CropScreen() {
-//   const [village, setVillage] = useState("");
-//   const [soil, setSoil] = useState("");
-//   const [season, setSeason] = useState("");
-
-//   const [villages, setVillages] = useState<any[]>([]);
-//   const [soils, setSoils] = useState<any[]>([]);
-//   const [seasons, setSeasons] = useState<any[]>([]);
-
-//   const [result, setResult] = useState<any>(null);
-//   const [loading, setLoading] = useState(false);
-
-//   const BASE_URL =
-//     "https://crop-recommendation-system-1-gi84.onrender.com";
-
-//   useEffect(() => {
-//     fetch(`${BASE_URL}/options`)
-//       .then((res) => res.json())
-//       .then((data) => {
-//         setVillages(data.villages || []);
-//         setSoils(data.soil_types || []);
-//         setSeasons(data.seasons || []);
-//       });
-//   }, []);
-
-//   const fetchCrops = async () => {
-//     if (!village || !soil || !season) {
-//       setResult({ error: "कृपया सर्व पर्याय निवडा" });
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       setResult(null);
-
-//       const response = await fetch(`${BASE_URL}/predict`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           village,
-//           soil_type: soil,
-//           season,
-//         }),
-//       });
-
-//       const data = await response.json();
-//       setResult(data);
-//     } catch (error) {
-//       setResult({ error: "सर्व्हरशी संपर्क होत नाही ❌" });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <SafeAreaView style={{ flex: 1 }}>
-//       <ScrollView style={styles.container}>
-
-//         {/* HEADER */}
-//         <View style={styles.headerBox}>
-//           <Text style={styles.headerTitle}>🌱 Smart Crop Advisor</Text>
-//           <Text style={styles.headerSub}>
-//             तुमच्या शेतासाठी योग्य पीक निवडा
-//           </Text>
-//         </View>
-
-//         {/* CARD */}
-//         <View style={styles.card}>
-
-//           {/* VILLAGE */}
-//           <Text style={styles.label}>🏡 गाव निवडा</Text>
-//           <View style={styles.chipContainer}>
-//             {villages.map((v, i) => (
-//               <TouchableOpacity
-//                 key={i}
-//                 style={[
-//                   styles.chip,
-//                   village === v.value && styles.activeChip,
-//                 ]}
-//                 onPress={() => setVillage(v.value)}
-//               >
-//                 <Text>{v.label}</Text>
-//               </TouchableOpacity>
-//             ))}
-//           </View>
-
-//           {/* SOIL */}
-//           <Text style={styles.label}>🌍 माती</Text>
-//           <View style={styles.chipContainer}>
-//             {soils.map((s, i) => (
-//               <TouchableOpacity
-//                 key={i}
-//                 style={[
-//                   styles.chip,
-//                   soil === s.value && styles.activeChip,
-//                 ]}
-//                 onPress={() => setSoil(s.value)}
-//               >
-//                 <Text>{s.label}</Text>
-//               </TouchableOpacity>
-//             ))}
-//           </View>
-
-//           {/* SEASON */}
-//           <Text style={styles.label}>🌦 हंगाम</Text>
-//           <View style={styles.chipContainer}>
-//             {seasons.map((s, i) => (
-//               <TouchableOpacity
-//                 key={i}
-//                 style={[
-//                   styles.chip,
-//                   season === s.value && styles.activeChip,
-//                 ]}
-//                 onPress={() => setSeason(s.value)}
-//               >
-//                 <Text>{s.label}</Text>
-//               </TouchableOpacity>
-//             ))}
-//           </View>
-
-//           {/* BUTTON */}
-//           <TouchableOpacity style={styles.btn} onPress={fetchCrops}>
-//             <Text style={styles.btnText}>🌾 शिफारस मिळवा</Text>
-//           </TouchableOpacity>
-//         </View>
-
-//         {/* LOADING */}
-//         {loading && <ActivityIndicator size="large" color="#2E7D32" />}
-
-//         {/* RESULT */}
-//         {result && (
-//           <View style={styles.resultCard}>
-//             {result.error ? (
-//               <Text style={{ color: "red" }}>❌ {result.error}</Text>
-//             ) : (
-//               <>
-//                 <Text style={styles.resultTitle}>
-//                   🌾 {result.recommended_crop}
-//                 </Text>
-
-//                 <Text>🌡 {result.debug_info?.temperature}°C</Text>
-//                 <Text>💧 {result.debug_info?.humidity}%</Text>
-//                 <Text>🌧 {result.debug_info?.rainfall}</Text>
-
-//                 <Text style={{ marginTop: 10 }}>
-//                   ⚙️ {result.api_status}
-//                 </Text>
-//               </>
-//             )}
-//           </View>
-//         )}
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#F4FFF4",
-//   },
-
-//   headerBox: {
-//     backgroundColor: "#2E7D32",
-//     padding: 20,
-//     borderBottomLeftRadius: 20,
-//     borderBottomRightRadius: 20,
-//   },
-
-//   headerTitle: {
-//     color: "#fff",
-//     fontSize: 22,
-//     fontWeight: "bold",
-//   },
-
-//   headerSub: {
-//     color: "#E8F5E9",
-//     marginTop: 5,
-//   },
-
-//   card: {
-//     backgroundColor: "#fff",
-//     margin: 15,
-//     padding: 16,
-//     borderRadius: 15,
-//     elevation: 4,
-//   },
-
-//   label: {
-//     marginTop: 10,
-//     fontWeight: "600",
-//   },
-
-//   chipContainer: {
-//     flexDirection: "row",
-//     flexWrap: "wrap",
-//     marginTop: 8,
-//   },
-
-//   chip: {
-//     padding: 10,
-//     borderWidth: 1,
-//     borderRadius: 20,
-//     marginRight: 8,
-//     marginTop: 6,
-//     borderColor: "#ccc",
-//   },
-
-//   activeChip: {
-//     backgroundColor: "#C8E6C9",
-//     borderColor: "#2E7D32",
-//   },
-
-//   btn: {
-//     backgroundColor: "#2E7D32",
-//     padding: 15,
-//     borderRadius: 12,
-//     marginTop: 20,
-//   },
-
-//   btnText: {
-//     color: "#fff",
-//     textAlign: "center",
-//     fontWeight: "bold",
-//   },
-
-//   resultCard: {
-//     backgroundColor: "#fff",
-//     margin: 15,
-//     padding: 16,
-//     borderRadius: 15,
-//     elevation: 4,
-//   },
-
-//   resultTitle: {
-//     fontSize: 20,
-//     fontWeight: "bold",
-//     color: "#2E7D32",
-//     marginBottom: 10,
-//   },
-// });
-
-
-
 import React, { useEffect, useState } from "react";
 import {
   ScrollView,
@@ -266,6 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Speech from "expo-speech";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
 
 export default function CropScreen() {
   const [village, setVillage] = useState("");
@@ -358,6 +103,13 @@ export default function CropScreen() {
         cropMarathiMap[data.recommended_crop?.toLowerCase()] ||
         data.recommended_crop;
 
+      // const finalResult = {
+      //   crop: marathiCrop,
+      //   weather,
+      //   raw: data,
+      // };
+
+      // setResult(finalResult);
       const finalResult = {
         crop: marathiCrop,
         weather,
@@ -365,6 +117,24 @@ export default function CropScreen() {
       };
 
       setResult(finalResult);
+
+      // SAVE TO FIRESTORE HISTORY
+      try {
+        await addDoc(collection(db, "history"), {
+          type: "Crop Recommendation",
+          result: marathiCrop,
+          village: village,
+          soil: soil,
+          season: season,
+          weatherTemp: weather?.temp || 0,
+          humidity: weather?.humidity || 0,
+          date: new Date().toLocaleString(),
+        });
+
+        console.log("✅ Crop history saved");
+      } catch (err) {
+        console.log("❌ History save error:", err);
+      }
 
       // 🔊 SPEECH OUTPUT
       let speechText = `तुमच्या शेतासाठी योग्य पीक आहे ${marathiCrop}.`;
