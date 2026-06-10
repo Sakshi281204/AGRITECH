@@ -51,6 +51,7 @@ export default function RegisterScreen() {
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor={"#000"}
         style={styles.input}
         value={email}
         onChangeText={setEmail}
@@ -59,6 +60,7 @@ export default function RegisterScreen() {
 
       <TextInput
         placeholder="Password"
+        placeholderTextColor={"#000"}
         secureTextEntry
         style={styles.input}
         value={password}
@@ -106,11 +108,12 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#000",
     padding: 12,
     borderRadius: 10,
     marginBottom: 15,
     backgroundColor: "#fff",
+    color:"#000",
   },
 
   button: {

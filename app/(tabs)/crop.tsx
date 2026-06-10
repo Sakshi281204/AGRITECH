@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Speech from "expo-speech";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { collection, addDoc,serverTimestamp } from "firebase/firestore";
+import { db,auth } from "../../config/firebase";
 
 export default function CropScreen() {
   const [village, setVillage] = useState("");
@@ -94,6 +94,7 @@ export default function CropScreen() {
         }),
       });
 
+      
       const data = await response.json();
 
       // 🔥 WEATHER CALL
@@ -102,12 +103,8 @@ export default function CropScreen() {
       const marathiCrop =
         cropMarathiMap[data.recommended_crop?.toLowerCase()] ||
         data.recommended_crop;
-
-      // const finalResult = {
-      //   crop: marathiCrop,
-      //   weather,
-      //   raw: data,
-      // };
+      
+      
 
       // setResult(finalResult);
       const finalResult = {
@@ -119,22 +116,50 @@ export default function CropScreen() {
       setResult(finalResult);
 
       // SAVE TO FIRESTORE HISTORY
-      try {
-        await addDoc(collection(db, "history"), {
-          type: "Crop Recommendation",
-          result: marathiCrop,
-          village: village,
-          soil: soil,
-          season: season,
-          weatherTemp: weather?.temp || 0,
-          humidity: weather?.humidity || 0,
-          date: new Date().toLocaleString(),
-        });
+      const uid = auth.currentUser?.uid;
 
-        console.log("✅ Crop history saved");
-      } catch (err) {
-        console.log("❌ History save error:", err);
-      }
+console.log("Current UID:", uid);
+console.log("Current Email:", auth.currentUser?.email);
+
+if (uid) {
+  try {
+console.log("About to save crop history...");
+await addDoc(
+  collection(
+    db,
+    "users",
+    uid,
+    "cropHistory"
+  ),
+  {
+    type: "crop",
+
+    crop: marathiCrop,
+    village,
+    soil,
+    season,
+
+    weatherTemp: weather?.temp || 0,
+    humidity: weather?.humidity || 0,
+
+    userId: uid,
+    userEmail: auth.currentUser?.email || "",
+
+    createdAt: serverTimestamp(),
+  }
+);
+    console.log("✅ Crop history saved");
+console.log("Crop Data:", {
+  crop: marathiCrop,
+  village,
+  soil,
+  season,
+});
+  } catch (err:any) {
+    console.log("❌ History save error:", err);
+    console.log("❌ Error Message:", err?.message);
+  }
+}
 
       // 🔊 SPEECH OUTPUT
       let speechText = `तुमच्या शेतासाठी योग्य पीक आहे ${marathiCrop}.`;

@@ -9,7 +9,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Image,
 } from "react-native";
 
 export default function CropGuide() {
@@ -17,81 +16,46 @@ export default function CropGuide() {
 
   const cropData: any = {
     कांदा: {
-      image: require("../../assets/images/onion.png"),
-
       lifecycle: [
         "1️⃣ बी पेरणी",
         "2️⃣ रोप वाढ",
         "3️⃣ गाठी तयार होणे",
         "4️⃣ काढणी",
       ],
-
-      irrigation:
-        "दर 7-10 दिवसांनी पाणी द्यावे. ठिबक सिंचन सर्वोत्तम आहे.",
-
-      fertilizer:
-        "युरिया 50 किलो + डीएपी 50 किलो प्रति एकर वापरावे.",
-
+      irrigation: "दर 7-10 दिवसांनी पाणी द्यावे. ठिबक सिंचन सर्वोत्तम आहे.",
+      fertilizer: "युरिया 50 किलो + डीएपी 50 किलो प्रति एकर वापरावे.",
       disease:
         "थ्रिप्स, जांभळा डाग रोग, पांढरी बुरशी यांचा प्रादुर्भाव होऊ शकतो.",
-
-      organic:
-        "कडुनिंब तेल फवारणी व ट्रायकोडर्मा वापरावे.",
-
-      harvesting:
-        "पाने पिवळी पडल्यावर कांदा काढणीस तयार होतो.",
+      organic: "कडुनिंब तेल फवारणी व ट्रायकोडर्मा वापरावे.",
+      harvesting: "पाने पिवळी पडल्यावर कांदा काढणीस तयार होतो.",
     },
 
     टोमॅटो: {
-      image: require("../../assets/images/tomato.png"),
-
       lifecycle: [
         "1️⃣ रोप तयार करणे",
         "2️⃣ फुलोरा",
         "3️⃣ फळ धरणे",
         "4️⃣ काढणी",
       ],
-
-      irrigation:
-        "5-7 दिवसांनी पाणी द्यावे. पाणी साचू देऊ नये.",
-
-      fertilizer:
-        "NPK 19:19:19 व सेंद्रिय खत वापरावे.",
-
-      disease:
-        "अर्ली ब्लाइट, लेट ब्लाइट आणि व्हायरस रोगांचा धोका.",
-
-      organic:
-        "कडुनिंब अर्क व जैविक बुरशीनाशके वापरावीत.",
-
-      harvesting:
-        "फळ पूर्ण लाल झाल्यावर तोडणी करावी.",
+      irrigation: "5-7 दिवसांनी पाणी द्यावे. पाणी साचू देऊ नये.",
+      fertilizer: "NPK 19:19:19 व सेंद्रिय खत वापरावे.",
+      disease: "अर्ली ब्लाइट, लेट ब्लाइट आणि व्हायरस रोगांचा धोका.",
+      organic: "कडुनिंब अर्क व जैविक बुरशीनाशके वापरावीत.",
+      harvesting: "फळ पूर्ण लाल झाल्यावर तोडणी करावी.",
     },
 
     द्राक्षे: {
-      image: require("../../assets/images/grape.png"),
-
       lifecycle: [
         "1️⃣ छाटणी",
         "2️⃣ कळी फुटणे",
         "3️⃣ फुलोरा",
         "4️⃣ दाणे वाढ",
       ],
-
-      irrigation:
-        "ठिबक सिंचन प्रणाली सर्वोत्तम आहे.",
-
-      fertilizer:
-        "सेंद्रिय खत व सूक्ष्म अन्नद्रव्ये वापरावीत.",
-
-      disease:
-        "पावडरी मिल्ड्यू व डाउनी मिल्ड्यू रोगांचा धोका.",
-
-      organic:
-        "सल्फर फवारणी व जैविक बुरशीनाशके वापरावीत.",
-
-      harvesting:
-        "दाणे पूर्ण आकार घेतल्यावर काढणी करावी.",
+      irrigation: "ठिबक सिंचन प्रणाली सर्वोत्तम आहे.",
+      fertilizer: "सेंद्रिय खत व सूक्ष्म अन्नद्रव्ये वापरावीत.",
+      disease: "पावडरी मिल्ड्यू व डाउनी मिल्ड्यू रोगांचा धोका.",
+      organic: "सल्फर फवारणी व जैविक बुरशीनाशके वापरावीत.",
+      harvesting: "दाणे पूर्ण आकार घेतल्यावर काढणी करावी.",
     },
   };
 
@@ -133,9 +97,7 @@ export default function CropGuide() {
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={selectedCrop}
-            onValueChange={(itemValue) =>
-              setSelectedCrop(itemValue)
-            }
+            onValueChange={(itemValue) => setSelectedCrop(itemValue)}
           >
             <Picker.Item label="🧅 कांदा" value="कांदा" />
             <Picker.Item label="🍅 टोमॅटो" value="टोमॅटो" />
@@ -143,36 +105,19 @@ export default function CropGuide() {
           </Picker>
         </View>
 
-        {/* Image */}
-        <View style={styles.imageCard}>
-          <Image
-            source={data.image}
-            style={styles.cropImage}
-            resizeMode="cover"
-          />
-        </View>
-
         {/* Voice Button */}
-        <TouchableOpacity
-          style={styles.voiceButton}
-          onPress={speakGuide}
-        >
-          <Text style={styles.voiceText}>
-            🔊 माहिती ऐका
-          </Text>
+        <TouchableOpacity style={styles.voiceButton} onPress={speakGuide}>
+          <Text style={styles.voiceText}>🔊 माहिती ऐका</Text>
         </TouchableOpacity>
 
         {/* Lifecycle */}
         <View style={styles.card}>
           <Text style={styles.heading}>🌱 जीवनचक्र</Text>
-
-          {data.lifecycle.map(
-            (stage: string, index: number) => (
-              <Text key={index} style={styles.text}>
-                {stage}
-              </Text>
-            )
-          )}
+          {data.lifecycle.map((stage: string, index: number) => (
+            <Text key={index} style={styles.text}>
+              {stage}
+            </Text>
+          ))}
         </View>
 
         {/* Irrigation */}
@@ -244,20 +189,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     elevation: 5,
     marginBottom: 15,
-  },
-
-  imageCard: {
-    marginHorizontal: 15,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    elevation: 5,
-    padding: 8,
-  },
-
-  cropImage: {
-    width: "100%",
-    height: 230,
-    borderRadius: 15,
   },
 
   voiceButton: {

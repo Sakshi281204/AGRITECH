@@ -11,14 +11,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { auth, db } from "../../config/firebase";
+
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+} from "firebase/firestore";
 
 type HistoryItem = {
   id: string;
   type: string;
   result: string;
   date: string;
+  timestamp: number;
 };
 
 export default function History() {
@@ -29,41 +36,91 @@ export default function History() {
     loadHistory();
   }, []);
 
+  
+
   const loadHistory = async () => {
     try {
-      const querySnapshot = await getDocs(
-        collection(db, "history")
+      const uid = auth.currentUser?.uid;
+
+      console.log("History Screen UID:", uid);
+
+      if (!uid) {
+        setLoading(false);
+        return;
+      }
+      const allHistory: HistoryItem[] = [];
+
+      // CROP HISTORY
+      const cropSnapshot = await getDocs(
+        query(
+          collection(db, "users", uid, "cropHistory"),
+          orderBy("createdAt", "desc")
+        )
       );
+console.log("Crop History Count:", cropSnapshot.size);
+      cropSnapshot.forEach((doc) => {
+        const item: any = doc.data();
 
-      const data: HistoryItem[] = [];
+        const timestamp = item.createdAt?.seconds
+          ? item.createdAt.seconds * 1000
+          : 0;
 
-      querySnapshot.forEach((document) => {
-        const item: any = document.data();
+        allHistory.push({
+          id: doc.id,
 
-        let formattedDate = "No Date";
+          type: "🌾 पीक शिफारस",
 
-        if (item.date) {
-          if (
-            typeof item.date === "object" &&
-            item.date.seconds
-          ) {
-            formattedDate = new Date(
-              item.date.seconds * 1000
-            ).toLocaleString();
-          } else {
-            formattedDate = String(item.date);
-          }
-        }
+          result: `पीक: ${item.crop}
+गाव: ${item.village}
+माती: ${item.soil}
+हंगाम: ${item.season}`,
 
-        data.push({
-          id: document.id,
-          type: item.type || "AGRITECH",
-          result: item.result || "माहिती उपलब्ध नाही",
-          date: formattedDate,
+          date: timestamp
+            ? new Date(timestamp).toLocaleString()
+            : "दिनांक उपलब्ध नाही",
+
+          timestamp,
         });
       });
 
-      setHistory(data);
+      // DISEASE HISTORY
+      const diseaseSnapshot = await getDocs(
+        query(
+          collection(db, "users", uid, "diseaseHistory"),
+          orderBy("createdAt", "desc")
+        )
+      );
+
+      diseaseSnapshot.forEach((doc) => {
+        const item: any = doc.data();
+
+        const timestamp = item.createdAt?.seconds
+          ? item.createdAt.seconds * 1000
+          : 0;
+
+        allHistory.push({
+          id: doc.id,
+
+          type: "🦠 रोग ओळख",
+
+          result: `पीक: ${item.crop}
+रोग: ${item.disease}
+विश्वास: ${item.confidence}%`,
+
+          date: timestamp
+            ? new Date(timestamp).toLocaleString()
+            : "दिनांक उपलब्ध नाही",
+
+          timestamp,
+        });
+      });
+
+      // SORT LATEST FIRST
+      allHistory.sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+
+      setHistory(allHistory);
     } catch (error) {
       console.log("History Error:", error);
     } finally {
@@ -77,9 +134,7 @@ export default function History() {
 
   const renderItem = ({ item }: { item: HistoryItem }) => (
     <View style={styles.card}>
-      <Text style={styles.type}>
-        {item.type}
-      </Text>
+      <Text style={styles.type}>{item.type}</Text>
 
       <Text style={styles.result}>
         {item.result}

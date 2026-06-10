@@ -5,11 +5,15 @@
     "version": "1.0.0",
     "description": "AGRITECH is a smart farming assistant app providing live weather updates, alerts, and farmer support services.",
     "orientation": "portrait",
-    "icon": "./assets/images/logo .jpeg",
+    "icon": "./assets/images/logo2.png",
     "scheme": "agritech",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "y",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.sakshi281204.agritech",
@@ -24,22 +28,22 @@
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/logo2.png",
+        "backgroundImage": "./assets/images/logo2.png",
+        "monochromeImage": "./assets/images/logo2.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo2.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/logo2.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

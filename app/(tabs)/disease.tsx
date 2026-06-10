@@ -14,8 +14,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as Speech from "expo-speech";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { collection, addDoc ,serverTimestamp } from "firebase/firestore";
+import { auth, db } from "../../config/firebase";
 
 type Message = {
   id: string;
@@ -178,36 +178,27 @@ export default function DiseaseScreen() {
         throw new Error("Prediction Failed");
       }
 
-      const plant =
-        cropNames[data["वनस्पती"]] ||
-        data["वनस्पती"];
+const plant =
+  cropNames[data["वनस्पती"]] ||
+  data["वनस्पती"];
 
-      const disease =
-        data["रोग"] || "रोग ओळखला नाही";
+const disease =
+  data["रोग"] ||
+  "रोग ओळखला नाही";
 
-      const remedy =
-        data["उपाय"] || "उपाय उपलब्ध नाही";
+const remedy =
+  data["उपाय"] ||
+  "उपाय उपलब्ध नाही";
 
-      const confidence =
-        data["confidence"] || 0;
-
-//       const resultText =
-//         `🌱 पीक: ${plant}
-
-// 🦠 रोग:
-// ${disease}
-
-// 💊 उपाय:
-// ${remedy}
-
-// 📊 विश्वास:
-// ${confidence}%`;
+const confidence =
+  data["confidence"] || 0;
 
 //       addBotMessage(resultText);
-      const resultText =
-      `🌱 पीक: ${plant}
 
-🦠 रोग:
+        const resultText = `
+🌱 पीक: ${plant}
+
+🦠 आढळलेला रोग:
 ${disease}
 
 💊 उपाय:
@@ -217,14 +208,34 @@ ${remedy}
 ${confidence}%`;
 
 try {
-  await addDoc(collection(db, "history"), {
-    type: "Disease Detection",
+const uid = auth.currentUser?.uid;
+  if (!uid) {
+  console.log("User not logged in");
+  return;
+}
+
+await addDoc(
+  collection(
+    db,
+    "users",
+    uid,
+    "diseaseHistory"
+  ),
+  {
+    type: "disease",
+
     crop: plant,
     disease: disease,
-    result: remedy,
+    remedy: remedy,
+
     confidence: confidence,
-    date: new Date().toLocaleString(),
-  });
+
+    userId: uid,
+    userEmail: auth.currentUser?.email || "",
+
+    createdAt: serverTimestamp(),
+  }
+);
 
   console.log("✅ Disease history saved");
 } catch (err) {
